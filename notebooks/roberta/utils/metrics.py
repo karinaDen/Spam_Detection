@@ -33,12 +33,16 @@ def compute_metrics(y_true, y_pred, positive_label="spam", negative_label="ham")
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * (precision * recall) / (precision + recall)
-    # Calculate ROC AUC score
-    roc_auc = roc_auc_score(y_true, y_pred)
-    
-    
-    return accuracy, precision, recall, f1, roc_auc
 
+    y_true_numeric = np.where(y_true == positive_label, 1, 0)
+    y_pred_numeric = np.where(y_pred == positive_label, 1, 0)
+
+    # Calculate ROC AUC score
+    roc_auc = roc_auc_score(y_true_numeric, y_pred_numeric)
+
+    return accuracy, precision, recall, f1, roc_auc
+    
+    
 
 def confusion_matrix(y_true, y_pred):
     """

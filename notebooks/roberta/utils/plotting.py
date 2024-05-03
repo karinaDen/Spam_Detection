@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+from sklearn.metrics import roc_curve, auc
+
 
 def plot_heatmap(cm, saveToFile=None, annot=True, fmt="d", cmap="Blues", xticklabels=None, yticklabels=None):
     """
@@ -72,11 +74,14 @@ def plot_roc_auc(fpr, tpr, saveToFile=None):
         None
     """
     
+    # Compute ROC area
+    roc_auc = auc(fpr, tpr)
+
     # Create a figure and axis for the ROC curve
     fig, ax = plt.subplots()
 
     # Plot the ROC curve
-    ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve')
+    ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve',  label='ROC curve (area = %0.2f)' % roc_auc)
     ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
 
     # Set labels and title

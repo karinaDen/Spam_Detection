@@ -5,7 +5,9 @@ from transformers import RobertaTokenizer, RobertaForSequenceClassification, get
 from roberta.utils.metrics import compute_metrics, confusion_matrix
 from roberta.utils.plotting import plot_heatmap, plot_roc_auc
 from roberta.utils.seed import random_seed
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import LabelBinarizer
+
 
 import matplotlib.pyplot as plt
 
@@ -50,6 +52,8 @@ class SpamMessageDetector:
 
         # Make predictions on the dataset
         predictions = []
+        probabilities = []
+
         with torch.no_grad():
             for input_ids, attention_mask in inputs:
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
@@ -59,6 +63,11 @@ class SpamMessageDetector:
                     predictions.append("ham")
                 else:
                     predictions.append("spam")
+
+                # Calculate the probability of the positive class
+                proba = torch.nn.functional.softmax(logits, dim=1)[:, 1].item()
+                probabilities.append(proba)
+    
                     
         # compute evaluation metrics
         accuracy, precision, recall, f1, roc_auc = compute_metrics(labels, predictions)
@@ -74,10 +83,18 @@ class SpamMessageDetector:
         print(f"F1 Score: {f1:.4f}")
         print(f"ROC AUC: {roc_auc:.4f}")
 
-        fpr, tpr = roc_curve(labels, predictions, pos_label="spam")
+        # Convert labels to binary
+        lb = LabelBinarizer()
+        y_true = lb.fit_transform(labels).flatten()  # "spam" becomes 1, "ham" becomes 0
+
+        # Compute ROC curve
+        fpr, tpr, _ = roc_curve(y_true, probabilities)
+
 
         # Plot the confusion matrix
-        plot_heatmap(cm, saveToFile="plots/confusion_matrix.png", annot=True, fmt="d", cmap="Blues", xticklabels=labels_sorted, yticklabels=labels_sorted)
+        plot_heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=labels_sorted, yticklabels=labels_sorted)
+
+        # Plot the ROC curve
         plot_roc_auc(fpr, tpr)
         
     
@@ -114,11 +131,12 @@ class SpamMessageDetector:
 
         logits = outputs.logits
         predicted_labels = torch.argmax(logits, dim=1).tolist()
+        proba = torch.nn.functional.softmax(logits, dim=1)[:, 1].tolist()
         
         if is_str: 
-            return predicted_labels[0]
+            return predicted_labels[0], proba[0]
         else:
-            return predicted_labels
+            return predicted_labels, proba
     
     def save_model(self, model_path):
         self.model.save_pretrained(model_path)
