@@ -81,7 +81,7 @@ def plot_roc_auc(fpr, tpr, saveToFile=None):
     fig, ax = plt.subplots()
 
     # Plot the ROC curve
-    ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve',  label='ROC curve (area = %0.2f)' % roc_auc)
+    ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
     ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
 
     # Set labels and title
